@@ -1,0 +1,195 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+void bubble(int arr[], int n);
+void insert(int arr[], int n);
+void merge(int arr[], int left, int right);
+void two_merge(int arr[], int left, int mid, int right);
+void pile(int arr[], int n, int i);
+void heap(int arr[], int n);
+void printArr(int arr[], int n);
+int* genArray(int size);
+void copyArr(int source[], int dest[], int n);
+double testAlg(void(*sortFunc)(int[], int), int arr[], int n, const char* name);
+double testMergeAlg(int arr[], int n, const char* name);
+
+int main() {
+        srand(time(NULL));
+        int arr_size[] = {10, 1000, 10000, 100000};
+        int num_size = sizeof(arr_size) / sizeof(arr_size[0]);
+
+        printf("\n");
+        printf("[ Сравнение времени выполнения сортировок (в секундах) ]\n");
+        printf("\n");
+        printf("%-20s %-28s %-28s %-22s %-22s\n",
+                "Размер массива",
+                "Пузырьком",
+                "Вставками",
+                "Слиянием",
+                "Пирамидальная");
+
+        for (int i=0; i < num_size; i++) {
+                int size = arr_size[i];
+                printf("%-15d", size);
+                int* orig = genArray(size);
+                int* test = (int*)malloc(size * sizeof(int));
+                if (orig == NULL || test == NULL) {
+                        printf("Не выделилась память\n");
+                        return 1;
+                }
+
+copyArr(orig, test, size);
+        double time = testAlg(bubble, test, size, "Bubble");
+        printf("%-20.6f", time);
+
+        copyArr(orig, test, size);
+        time = testAlg(insert, test, size, "Insert");
+        printf("%-20.6f", time);
+
+        copyArr(orig, test, size);
+        time = testMergeAlg(test, size, "Merge");
+        printf("%-20.6f", time);
+
+        copyArr(orig, test, size);
+        time = testAlg(heap, test, size, "Heap");
+        printf("%-20.6f", time);
+
+        printf("\n");
+        free(orig);
+        free(test);
+        }
+return 0;
+}
+
+int* genArray(int size) {
+        int* arr = (int*)malloc(size * sizeof(int));
+        if (arr == NULL)
+                return NULL;
+        for (int i=0; i<size; i++) {
+                arr[i] = rand() % 10000;
+        }
+        return arr;
+}
+
+void copyArr(int source[], int dest[], int n) {
+        for (int i=0; i<n; i++) {
+                dest[i] = source[i];
+        }
+}
+
+double testAlg(void (*sortFunc)(int[], int), int arr[], int n, const char* name>
+        clock_t start = clock();
+        sortFunc(arr, n);
+        clock_t end = clock();
+        return (double)(end - start) / CLOCKS_PER_SEC;
+}
+double testMergeAlg(int arr[], int n, const char* name) {
+        clock_t start = clock();
+        merge(arr, 0, n-1);
+        clock_t end = clock();
+        return (double)(end - start) / CLOCKS_PER_SEC;
+}
+
+
+void bubble(int arr[], int n) {
+        for (int i=0; i<n; i++) {
+                for (int j=0; j<n-i-1; j++) {
+                        if (arr[j] > arr[j+1]) {
+                                int temp = arr[j];
+                                arr[j] = arr[j+1];
+                                arr[j+1] = temp;
+                        }
+                }
+        }
+}
+
+void insert(int arr[], int n) {
+        for (int i=1; i<n; i++) {
+                int key = arr[i];
+                int j = i-1;
+                while (j>=0 && arr[j] > key) {
+                        arr[j+1] = arr[j];
+                        j = j-1;
+                }
+        arr[j+1] = key;
+        }
+}
+
+void merge(int arr[], int left, int right) {
+        if (left < right) {
+                int mid = left + (right - left) / 2;
+                merge(arr, left, mid);
+                merge(arr, mid+1, right);
+                two_merge(arr, left, mid, right);
+        }
+}
+
+void two_merge(int arr[], int left, int mid, int right) {
+        int i, j, k;
+        int n1 = mid - left +1;
+        int n2 = right - mid;
+        int* L = (int*)malloc(n1 * sizeof(int));
+        int* R = (int*)malloc(n1 * sizeof(int));
+        if (L == NULL || R == NULL) return;
+        for (i=0; i<n1; i++)
+                L[i] = arr[left+i];
+        for (j=0; j<n2; j++)
+                R[j] = arr[mid + j + 1];
+        i=0;
+        j=0;
+        k=left;
+        while (i<n1 && j<n2) {
+                if (L[i] <= R[j]) {
+                        arr[k] = L[i];
+                        i++;
+                } else {
+                        arr[k] = R[j];
+                        j++;
+        }
+                k++;
+        }
+        while (j<n2) {
+                arr[k] = R[j];
+                j++;
+                k++;
+        }
+        while (i<n1) {
+                arr[k] = L[i];
+                i++;
+                k++;
+        }
+        free(L);
+        free(R);
+}
+
+void pile(int arr[], int n, int i) {
+        int largest = i;
+        int l = 2*i+1;
+        int r = 2*i+2;
+        if (l < n && arr[l] > arr[largest]) largest = l;
+        if (l < n && arr[r] > arr[largest]) largest = r;
+        if (largest != i) {
+                int tmp = arr[i];
+                arr[i] = arr[largest];
+                arr[largest] = tmp;
+                pile(arr, n, largest);
+}
+}
+void heap(int arr[], int n) {
+        for (int i=n/2-1; i>=0; i--)
+                pile(arr, n, i);
+        for (int i = n-1; i>0; i--) {
+                int tmp = arr[0];
+                arr[0] = arr[i];
+                arr[i] = tmp;
+                pile(arr, i, 0);
+        }
+}
+
+void printArr(int arr[], int n) {
+        for (int i=0; i<n; i++) {
+                printf("%d ", arr[i]);
+        }
+        printf("\n");
+}
