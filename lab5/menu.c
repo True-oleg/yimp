@@ -17,7 +17,7 @@ void print_menu(void) {
         printf("7. Загрузить из файла\n");
         printf("8. Выход\n");
         print_separator();
-        printf("\nВведите цифру, чтобы продолжить:\n");
+        printf("\n");
 }
 
 void display(GameArray* array) {
