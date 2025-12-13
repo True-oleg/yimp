@@ -12,9 +12,10 @@ void print_menu(void) {
         printf("2. Добавить игру\n");
         printf("3. Удалить игру\n");
         printf("4. Добавить или изменить описание\n");
-        printf("5. Сохранить измения\n");
-        printf("6. Загрузить из файла\n");
-        printf("7. Выход\n");
+        printf("5. Найти игру\n");
+        printf("6. Сохранить измения\n");
+        printf("7. Загрузить из файла\n");
+        printf("8. Выход\n");
         print_separator();
         printf("\nВведите цифру, чтобы продолжить:\n");
 }
@@ -28,8 +29,8 @@ void display(GameArray* array) {
         printf("Всего игр: %d\n\n", array->size);
         for (int i=0; i < array->size; i++) {
                 printf("%d. %s\n", i+1, array->games[i].title);
-                printf("id: %d | Разработчик: %s | Рейтинг: %.1f/10\n", array->games[i].id, array->gam>
-                printf(" Дата выхода: %02d.%02d.%d\n", array->games[i].rel_date.day, array->games[i].r>
+                printf("id: %d | Разработчик: %s | Рейтинг: %.1f/10\n", array->games[i].id, array->game[i].developer, array->game[i].rating);
+                printf(" Дата выхода: %02d.%02d.%d\n", array->games[i].rel_date.day, array->games[i].rel_date.month, array->games[i].rel_date.year);
                 printf(" Описание: %s\n", array->games[i].desc);
                 print_separator();
         }
@@ -111,4 +112,43 @@ void add_desc_game(GameArray* array) {
         get_string_input("Введите новое описание: ", new_desc, sizeof(new_desc));
         add_desc(&array->games[choice-1], new_desc);
         printf("Описание добавлено!\n");
+}
+
+void search_game(GameArray* array) {
+        if (!array || array->size == 0) {
+                printf("База данных пуста!\n");
+                return;
+        }
+        printf("\n[ Поиск игры ]\n");
+        printf("1. По названию\n");
+        printf("2. По разработчику\n");
+        int choice = get_int_input("Ваш выбор: ", 1, 2);
+        char search_term[50];
+        int found = 0;
+
+        switch (choice) {
+                case 1:
+                        get_string_input("Введите название игры: ", search_term, 50);
+                        printf("\nРезультаты поиска '%s':\n", search_term);
+                        for (int i=0; i < array->size; i++) {
+                                if (strstr(array->games[i].title, search_term) != NULL) {
+                                        print_game_detail(&array->games[i]);
+                                        found++;
+                                }
+                        }
+                        break;
+                case 2:
+                        get_string_input("Введите развработчика: ", search_term, 50);
+                        printf("\nРезультаты поиска '%s':\n", search_term);
+                        for (int i=0; i < array->size; i++) { 
+                                if (strstr(array->games[i].developer, search_term) != NULL) {
+                                        print_game_detail(&array->games[i]);
+                                        found++;
+                                }
+                        }
+                        break;
+        }
+        if (found == 0) {
+                printf("Игры не найдены.\n");
+        }
 }
