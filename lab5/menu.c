@@ -15,7 +15,8 @@ void print_menu(void) {
         printf("5. Найти игру\n");
         printf("6. Сохранить измения\n");
         printf("7. Загрузить из файла\n");
-        printf("8. Выход\n");
+        printf("8. Зaгрузить другую базу данных\n");
+        printf("9. Выход\n");
         print_separator();
         printf("\n");
 }
