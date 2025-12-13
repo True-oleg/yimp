@@ -31,6 +31,8 @@ void get_string_input(const char* prompt, char* buffer, int max_len) {
         size_t len = strlen(buffer);
         if (len > 0 && buffer[len-1] == '\n') {
                 buffer[len-1] = '\0';
+        } else {
+                clear_input_buffer();
         }
 }
 
