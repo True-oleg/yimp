@@ -21,7 +21,7 @@ int main(void) {
         int running =1;
         while (running) {
                 print_menu();
-                choice = get_int_input("", 1, 7);
+                choice = get_int_input("Введите номер: ", 1, 8);
                 switch (choice) {
                         case 1:
                                 display(games);
@@ -40,6 +40,10 @@ int main(void) {
                                 press_enter_to_continue();
                                 break;
                         case 5:
+                                search_game(games);
+                                press_enter_to_continue();
+                                break;
+                        case 6:
                                 if (save(FILENAME, games)) {
                                         printf("Успешно сохранено!\n");
                                 } else {
@@ -47,7 +51,7 @@ int main(void) {
                                 }
                                 press_enter_to_continue();
                                 break;
-                        case 6:
+                        case 7:
                                 if (load(FILENAME, games)) { 
                                         printf("Успешно загружено!\n");
                                 } else {
@@ -55,7 +59,7 @@ int main(void) {
                                 }
                                 press_enter_to_continue();
                                 break;
-                        case 7:
+                        case 8:
                                 printf("Идёт сохранение данных...\n");
                                 if (save(FILENAME, games)) { 
                                         printf("Успешно сохранено! Выход из программы.\n");
