@@ -38,13 +38,13 @@ void print_separator(void) {
         printf("---------------------------------\n");
 }
 
-void print_game_details(const Game* game) {
+void print_game_detail(const Game* game) {
         if (!game) return;
-        print_separator;
+        print_separator();
         printf("Название: %s\n", game->title);
         printf("Разработчик: %s\n", game->developer);
         printf("id: %d\n", game->id);
-        printf("Дата выхода: %02d.%02d.%d\n", game->rel_date.day, game->rel_date.month, game->rel_date>
+        printf("Дата выхода: %02d.%02d.%d\n", game->rel_date.day, game->rel_date.month, game->rel_date.year);
         printf("Оценка: %.1f/10\n", game->rating.user_rate);
         printf("Описание: %s\n", game->desc);
 }
