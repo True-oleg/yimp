@@ -44,13 +44,13 @@ void displayGames(const GameDatabase& db) {
         return;
     }
     cout << "\n[ Список игр ]\n";
-    cout << db;  // используем перегруженный оператор <<
+    cout << db;
 }
 
 void addGame(GameDatabase& db) {
     cout << "[ Добавить новую игру ]\n";
     Game newGame;
-    cin >> newGame;  // используем перегруженный оператор >>
+    cin >> newGame;
     cout << "\nИгра '" << newGame.getTitle() << "' добавлена!\n";
 }
 
@@ -138,7 +138,7 @@ void searchGame(const GameDatabase& db) {
         cout << "Игры не найдены.\n";
     } else {
         for (int idx : results) {
-            cout << db[idx];  // используем перегруженный оператор <<
+            cout << db[idx];
         }
     }
 }
@@ -183,9 +183,6 @@ void loadAnotherDatabase(GameDatabase& db) {
     
     GameDatabase tempDb(newFilename);
     if (tempDb.load(newFilename)) {
-        // Копируем данные из временной БД
-        // В упрощённом варианте можно просто присвоить, но нужно реализовать оператор=
-        // Для простоты оставим как есть
         cout << "Данные загружены из '" << newFilename << "'!\n";
     } else {
         cout << "Ошибка загрузки файла '" << newFilename << "'!\n";
@@ -228,11 +225,9 @@ int main() {
     
     int choice;
     bool running = true;
-    
     while (running) {
         printMenu();
         choice = getIntInput("Введите номер: ", 1, 9);
-        
         switch (choice) {
             case 1:
                 displayGames(db);
