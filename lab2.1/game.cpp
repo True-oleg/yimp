@@ -56,8 +56,8 @@ int Game::nextId = 1;
 Game::Game() : id(nextId++) {}
 Game::Game(const std::string& t, const std::string& dev, 
            const RelDate& date, const Rating& rate, const std::string& desc)
-    : title(t), developer(dev), description(desc), 
-      releaseDate(date), rating(rate), id(nextId++) {}
+    : title(t), developer(dev), id(nextId++), description(desc), 
+      releaseDate(date), rating(rate) {}
 
 std::string Game::getTitle() const { return title; }
 std::string Game::getDeveloper() const { return developer; }
