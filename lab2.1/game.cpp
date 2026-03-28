@@ -1,6 +1,5 @@
 #include "game.h"
 #include <fstream>
-#include <algorithm>
 
 Rating::Rating(float rate) : user_rate(rate) {}
 float Rating::getRate() const { return user_rate; }
@@ -30,9 +29,11 @@ void RelDate::setDate(int d, int m, int y) {
 }
 
 std::ostream& operator<<(std::ostream& os, const RelDate& date) {
-    os << (date.day < 10 ? "0" : "") << date.day << "."
-       << (date.month < 10 ? "0" : "") << date.month << "."
-       << date.year;
+    if (date.day < 10) os << "0";
+    os << date.day << ".";
+    if (date.month < 10) os << "0";
+    os << date.month << ".";
+    os << date.year;
     return os;
 }
 
@@ -53,22 +54,28 @@ std::istream& operator>>(std::istream& is, RelDate& date) {
 }
 
 int Game::nextId = 1;
-Game::Game() : id(nextId++) {}
-Game::Game(const std::string& t, const std::string& dev, 
-           const RelDate& date, const Rating& rate, const std::string& desc)
-    : title(t), developer(dev), id(nextId++), description(desc), 
-      releaseDate(date), rating(rate) {}
+Game::Game() : id(nextId++) {
+    title[0] = '\0';
+    developer[0] = '\0';
+    description[0] = '\0';
+}
+Game::Game(const char* t, const char*& dev, const RelDate& date, const Rating& rate, const char* desc)
+    : releaseDate(date), rating(rate) id(nextId++) {
+    setTitle(t);
+    setDeveloper(dev);
+    setDescription(desc);
+}
 
-std::string Game::getTitle() const { return title; }
-std::string Game::getDeveloper() const { return developer; }
+const char* Game::getTitle() const { return title; }
+const char* Game::getDeveloper() const { return developer; }
 int Game::getId() const { return id; }
-std::string Game::getDescription() const { return description; }
+const char* Game::getDescription() const { return description; }
 RelDate Game::getReleaseDate() const { return releaseDate; }
 Rating Game::getRating() const { return rating; }
 
-void Game::setTitle(const std::string& newTitle) { title = newTitle; }
-void Game::setDeveloper(const std::string& newDeveloper) { developer = newDeveloper; }
-void Game::setDescription(const std::string& newDesc) { description = newDesc; }
+void Game::setTitle(const char* newTitle) { title = newTitle; }
+void Game::setDeveloper(const char* newDeveloper) { developer = newDeveloper; }
+void Game::setDescription(const char* newDesc) { description = newDesc; }
 void Game::setReleaseDate(const RelDate& date) { releaseDate = date; }
 void Game::setRating(const Rating& rate) { rating = rate; }
 
@@ -86,10 +93,10 @@ std::ostream& operator<<(std::ostream& os, const Game& game) {
 std::istream& operator>>(std::istream& is, Game& game) {
     std::cout << "Название игры: ";
     is.ignore();
-    std::getline(is, game.title);
+    is.getline(game.title, sizeof(game.title));
     
     std::cout << "Разработчик: ";
-    std::getline(is, game.developer);
+    is.getline(game.developer, sizeof(game.developer));
     
     std::cout << "Дата выхода:\n";
     is >> game.releaseDate;
@@ -98,37 +105,50 @@ std::istream& operator>>(std::istream& is, Game& game) {
     
     std::cout << "Краткое описание: ";
     is.ignore();
-    std::getline(is, game.description);
+    is.getline(game.description, sizeof(game.description));
     
     return is;
 }
 
-bool Game::containsTitle(const std::string& searchTerm) const {
-    return title.find(searchTerm) != std::string::npos;
+bool Game::containsTitle(const char* searchTerm) const {
+    return std::strstr(title, searchTerm) != nullptr;
 }
 
-bool Game::containsDeveloper(const std::string& searchTerm) const {
-    return developer.find(searchTerm) != std::string::npos;
+bool Game::containsDeveloper(const char* searchTerm) const {
+    return std::strstr(developer, searchTerm) != nullptr;
 }
 
-GameDatabase::GameDatabase() : currentFilename("games_db.bin") {}
-GameDatabase::GameDatabase(const std::string& filename) : currentFilename(filename) {}
+GameDatabase::GameDatabase() : games(nullptr), size(0), capacity(0) {
+    std::strcpy(currentFilename, "games_db.bin");
+}
+GameDatabase::GameDatabase(const char* filename) : games(nullptr), size(0), capacity(0) {
+    std::strncpy(currentFilename, filename, sizeof(currentFilename) - 1);
+    currentFilename[sizeof(currentFilename) - 1] = '\0';
+}
+GameDatabase::~GameDatabase() {
+    delete[] games;
+}
 
 bool GameDatabase::addGame(const Game& game) {
-    games.push_back(game);
+    if (size >= capacity) {
+        int newCapacity = (capacity == 0) ? 10 : capacity * 2;
+        if (!resize(newCapacity)) return false;
+    }
+    games[size] = game;
+    size++;
     return true;
 }
 
 bool GameDatabase::deleteGame(int index) {
-    if (index < 0 || index >= static_cast<int>(games.size())) {
-        return false;
+    if (index < 0 || index >= size) return false;
+    for (int i = index; i < size - 1; ++i) {
+        games[i] = games[i + 1];
     }
-    games.erase(games.begin() + index);
+    size--;
     return true;
 }
-
-int GameDatabase::getSize() const { return games.size(); }
-bool GameDatabase::isEmpty() const { return games.empty(); }
+int GameDatabase::getSize() const { return size; }
+bool GameDatabase::isEmpty() const { return sizw == 0; }
 
 Game& GameDatabase::operator[](int index) {
     return games[index];
@@ -138,102 +158,90 @@ const Game& GameDatabase::operator[](int index) const {
     return games[index];
 }
 
-std::vector<int> GameDatabase::searchByTitle(const std::string& title) const {
-    std::vector<int> results;
-    for (size_t i = 0; i < games.size(); ++i) {
+int* GameDatabase::searchByTitle(const char* title, int& foundCount) const {
+    int* results = new int[size];
+    foundCount = 0;
+    for (int i = 0; i < size(); ++i) {
         if (games[i].containsTitle(title)) {
-            results.push_back(i);
+            results[foundCount++] = i;
         }
     }
     return results;
 }
 
-std::vector<int> GameDatabase::searchByDeveloper(const std::string& developer) const {
-    std::vector<int> results;
-    for (size_t i = 0; i < games.size(); ++i) {
+int* GameDatabase::searchByDeveloper(const char* developer, int& foundCount) const {
+    int* results = new int[size];
+    foundCount = 0;
+    for (int i = 0; i < size; ++i) {
         if (games[i].containsDeveloper(developer)) {
-            results.push_back(i);
+            results[foundCount++] = i;
         }
     }
     return results;
 }
 
-bool GameDatabase::save(const std::string& filename) {
+bool GameDatabase::save(const char* filename) {
     std::ofstream file(filename, std::ios::binary);
     if (!file) return false;
-    
-    size_t size = games.size();
     file.write(reinterpret_cast<const char*>(&size), sizeof(size));
-    for (const auto& game : games) {
-        std::string title = game.getTitle();
-        std::string developer = game.getDeveloper();
-        std::string description = game.getDescription();
-        int id = game.getId();
+    
+ for (int i = 0; i < size; ++i) {
+        const Game& game = games[i];
+        
+        file.write(game.getTitle(), 50);
+        file.write(game.getDeveloper(), 50);
+        file.write(reinterpret_cast<const char*>(&game.getId()), sizeof(int));
+        file.write(game.getDescription(), 500);
+        
         RelDate date = game.getReleaseDate();
-        Rating rating = game.getRating();
-        
-        size_t len = title.length();
-        file.write(reinterpret_cast<const char*>(&len), sizeof(len));
-        file.write(title.c_str(), len);
-        
-        len = developer.length();
-        file.write(reinterpret_cast<const char*>(&len), sizeof(len));
-        file.write(developer.c_str(), len);
-        
-        len = description.length();
-        file.write(reinterpret_cast<const char*>(&len), sizeof(len));
-        file.write(description.c_str(), len);
-        file.write(reinterpret_cast<const char*>(&id), sizeof(id));
-        file.write(reinterpret_cast<const char*>(&date), sizeof(date));
-        file.write(reinterpret_cast<const char*>(&rating), sizeof(rating));
+        Rating rate = game.getRating();
+        file.write(reinterpret_cast<const char*>(&date), sizeof(RelDate));
+        file.write(reinterpret_cast<const char*>(&rate), sizeof(Rating));
     }
+    int nextId = Game::getNextId();
+    file.write(reinterpret_cast<const char*>(&nextId), sizeof(nextId));
     return true;
 }
 
-bool GameDatabase::load(const std::string& filename) {
+bool GameDatabase::load(const char* filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file) return false;
     
-    games.clear();
+    int newSize;
+    file.read(reinterpret_cast<char*>(&newSize), sizeof(newSize));
+        if (newSize > capacity) {
+        delete[] games;
+        games = new Game[newSize];
+        capacity = newSize;
+    }
+    size = newSize;
     
-    size_t size;
-    file.read(reinterpret_cast<char*>(&size), sizeof(size));
-    
-    for (size_t i = 0; i < size; ++i) {
-        std::string title, developer, description;
+    for (int i = 0; i < size; ++i) {
+        char title[50], developer[50], description[500];
         int id;
         RelDate date;
         Rating rating;
         
-        size_t len;
-        
-        file.read(reinterpret_cast<char*>(&len), sizeof(len));
-        title.resize(len);
-        file.read(&title[0], len);
-        
-        file.read(reinterpret_cast<char*>(&len), sizeof(len));
-        developer.resize(len);
-        file.read(&developer[0], len);
-        
-        file.read(reinterpret_cast<char*>(&len), sizeof(len));
-        description.resize(len);
-        file.read(&description[0], len);
-        
-        file.read(reinterpret_cast<char*>(&id), sizeof(id));
-        file.read(reinterpret_cast<char*>(&date), sizeof(date));
-        file.read(reinterpret_cast<char*>(&rating), sizeof(rating));
+        file.read(title, 50);
+        file.read(developer, 50);
+        file.read(reinterpret_cast<char*>(&id), sizeof(int));
+        file.read(description, 500);
+        file.read(reinterpret_cast<char*>(&date), sizeof(RelDate));
+        file.read(reinterpret_cast<char*>(&rating), sizeof(Rating));
         
         Game game(title, developer, date, rating, description);
-        games.push_back(game);
+        games[i] = game;
     }
     return true;
 }
 
-std::string GameDatabase::getCurrentFilename() const { return currentFilename; }
-void GameDatabase::setCurrentFilename(const std::string& filename) { currentFilename = filename; }
-
+const char* GameDatabase::getCurrentFilename() const { return currentFilename; }
+void GameDatabase::setCurrentFilename(const char* filename) {
+    std::strncpy(currentFilename, filename, sizeof(currentFilename) - 1);
+    currentFilename[sizeof(currentFilename) - 1] = '\0';
+}
 std::ostream& operator<<(std::ostream& os, const GameDatabase& db) {
-    if (db.games.empty()) {
+    if (db.isEmpty()) {
         os << "База данных пуста.\n";
         return os;
     }
