@@ -1,8 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 #include <iostream>
-#include <string>
-#include <vector>
+#include <cstring>
 
 class Rating {
 private:
@@ -34,66 +33,74 @@ public:
 
 class Game {
 private:
-    std::string title;
-    std::string developer;
+    char title[50];
+    char developer[50];
     int id;
-    std::string description;
+    char description[500];
     RelDate releaseDate;
     Rating rating;
     static int nextId;
     
 public:
     Game();
-    Game(const std::string& title, const std::string& developer, 
-         const RelDate& date, const Rating& rate, const std::string& desc = "");
+    Game(const char* title, const char* developer, 
+         const RelDate& date, const Rating& rate, const char* desc = "");
     
-    std::string getTitle() const;
-    std::string getDeveloper() const;
+    const char* getTitle() const;
+    const char* getDeveloper() const;
     int getId() const;
-    std::string getDescription() const;
+    const char* getDescription() const;
     RelDate getReleaseDate() const;
     Rating getRating() const;
     
-    void setTitle(const std::string& newTitle);
-    void setDeveloper(const std::string& newDeveloper);
-    void setDescription(const std::string& newDesc);
+    void setTitle(const char* newTitle);
+    void setDeveloper(const char* newDeveloper);
+    void setDescription(const char* newDesc);
     void setReleaseDate(const RelDate& date);
     void setRating(const Rating& rate);
+
+    static int getNextId();
+    static void setNextId(int id);
     
     friend std::ostream& operator<<(std::ostream& os, const Game& game);
     friend std::istream& operator>>(std::istream& is, Game& game);
     
-    bool containsTitle(const std::string& searchTerm) const;
-    bool containsDeveloper(const std::string& searchTerm) const;
+    bool containsTitle(const char* searchTerm) const;
+    bool containsDeveloper(const char* searchTerm) const;
 };
 
 class GameDatabase {
 private:
-    std::vector<Game> games;
-    std::string currentFilename;
+    Game* games;
+    int size;
+    int capacity;
+    char currentFilename[500];
+    bool resize(int newCapacity);
     
 public:
     GameDatabase();
-    explicit GameDatabase(const std::string& filename);
+    explicit GameDatabase(const char* filename);
+    ~GameDatabase();
     
     bool addGame(const Game& game);
     bool deleteGame(int index);
     int getSize() const;
     bool isEmpty() const;
+    void clear();
     
     Game& operator[](int index);
     const Game& operator[](int index) const;
     
-    std::vector<int> searchByTitle(const std::string& title) const;
-    std::vector<int> searchByDeveloper(const std::string& developer) const;
+    int* searchByTitle(const char* title, int& foundCount) const;
+    int* searchByDeveloper(const char* developer, int& foundCount) const;
     
-    bool save(const std::string& filename);
-    bool load(const std::string& filename);
+    bool save(const char* filename);
+    bool load(const char* filename);
     
-    std::string getCurrentFilename() const;
-    void setCurrentFilename(const std::string& filename);
+    const char* getCurrentFilename() const;
+    void setCurrentFilename(const char* filename);
     friend std::ostream& operator<<(std::ostream& os, const GameDatabase& db);
     friend std::istream& operator>>(std::istream& is, GameDatabase& db);
 };
 
-#endif // GAME_H
+#endif
