@@ -220,14 +220,14 @@ bool GameDatabase::load(const char* filename) {
         char title[50], developer[50], description[500];
         int id;
         RelDate date;
-        Rating rating;
+        Rating rate;
         
         file.read(title, 50);
         file.read(developer, 50);
         file.read(reinterpret_cast<char*>(&id), sizeof(int));
         file.read(description, 500);
         file.read(reinterpret_cast<char*>(&date), sizeof(RelDate));
-        file.read(reinterpret_cast<char*>(&rating), sizeof(Rating));
+        file.read(reinterpret_cast<char*>(&rate), sizeof(Rating));
         
         Game game(title, developer, date, rating, description);
         games[i] = game;
