@@ -84,7 +84,9 @@ void deleteGame(GameDatabase& db) {
     
     int confirm = getIntInput("Ваш выбор: ", 1, 2);
     if (confirm == 1) {
-        string title = db[index].getTitle();
+        const char* title = db[index].getTitle();
+        char gameTitle[50];
+        strcpy(gameTitle, title);
         if (db.deleteGame(index)) {
             cout << "\nИгра '" << title << "' удалена!\n";
         } else {
@@ -124,7 +126,8 @@ void searchGame(const GameDatabase& db) {
     
     int choice = getIntInput("Ваш выбор: ", 1, 2);
     string searchTerm;
-    vector<int> results;
+    int foundCount;
+    int* results = nullptr;
     
     if (choice == 1) {
         searchTerm = getStringInput("Введите название игры: ");
@@ -138,10 +141,11 @@ void searchGame(const GameDatabase& db) {
     if (results.empty()) {
         cout << "Игры не найдены.\n";
     } else {
-        for (int idx : results) {
-            cout << db[idx];
+        for (int i=0; i < foundCount; ++i) {
+            cout << db[results[i]];
         }
     }
+    delete[] results;
 }
 
 void saveDatabase(GameDatabase& db) {
@@ -182,8 +186,13 @@ void loadAnotherDatabase(GameDatabase& db) {
         newFilename += ".bin";
     }
     
-    GameDatabase tempDb(newFilename);
-    if (tempDb.load(newFilename)) {
+    GameDatabase tempDb(newFilename.c_str());
+    if (tempDb.load(newFilename.c_str())) {
+        db.clear();
+         for (int i = 0; i < tempDb.getSize(); ++i) {
+            db.addGame(tempDb[i]);
+        }
+        db.setCurrentFilename(newFilename.c_str());
         cout << "Данные загружены из '" << newFilename << "'!\n";
     } else {
         cout << "Ошибка загрузки файла '" << newFilename << "'!\n";
@@ -208,7 +217,7 @@ void printMenu() {
 }
 
 int main() {
-    const string DEFAULT_FILENAME = "games_db.bin";
+    const char* DEFAULT_FILENAME = "games_db.bin";
     GameDatabase db(DEFAULT_FILENAME);
     
     cout << "\n[ Выбор базы данных ]\n";
@@ -219,7 +228,7 @@ int main() {
     if (filename.find(".bin") == string::npos) {
         filename += ".bin";
     }
-    db.setCurrentFilename(filename);
+    db.setCurrentFilename(filename.c_str());
     cout << "Используется файл: " << filename << "\n";
     
     loadDatabase(db);
