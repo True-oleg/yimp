@@ -51,6 +51,7 @@ void addGame(GameDatabase& db) {
     cout << "[ Добавить новую игру ]\n";
     Game newGame;
     cin >> newGame;
+    db.addGame(newGame);
     cout << "\nИгра '" << newGame.getTitle() << "' добавлена!\n";
 }
 
